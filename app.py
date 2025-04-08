@@ -1,76 +1,23 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from users import login, get_accessible_departments, get_accessible_employees, can_edit, USERS
+from users import login, get_accessible_departments, get_accessible_employees, can_edit, USERS, DEPARTAMENTOS
 
 st.set_page_config(page_title="Sistema de Evaluación de KPIs", layout="wide")
-
-# Definición de departamentos y empleados
-DEPARTAMENTOS = {
-    "Diseño": ["Eduardo Alfaro", "Becario"],
-    "Programación": ["Oscar Ramirez", "Ivan N.", "Nuevo"],
-    "Hardware": ["Boris Gonzalez"],
-    "Plataforma": ["Brenda Muñiz", "Jesus Dominguez", "Susana Hernandez", "Karla Luna", "Marco N."],
-    "Coordinación Laboratorio": ["Alejandro Muñiz", "Otros"]
-}
 
 # Guardar departamentos en session_state para acceso desde users.py
 st.session_state.departamentos = DEPARTAMENTOS
 
 # KPIs por departamento/persona
 KPIS = {
-    "Eduardo Alfaro": {
-        'KPI': [
-            'Entregas a tiempo',
-            '% de diseños aprobados en primer intento',
-            'N° de materiales diseñados al mes',
-            'Tasa de interacción con contenidos visuales',
-            'Cumplimiento del manual de marca',
-            'Satisfacción de equipos internos',
-            'Errores post-publicación',
-            'Cantidad de contenidos visuales publicados',
-            'Impacto del contenido visual en redes',
-            'Índice de innovación visual',
-            'Colaboración efectiva con equipos',
-            'Tiempo promedio de respuesta a solicitudes'
-        ],
-        'Descripción': [
-            'Fechas de entrega planificadas vs reales; se califica el cumplimiento de los plazos.',
-            'Número de diseños aceptados sin corrección; se califica la precisión y alineación con el briefing.',
-            'Volumen de trabajo entregado; se califica la productividad mensual.',
-            'Número de likes, comentarios y compartidos en relación a las impresiones; se califica la efectividad del diseño en redes.',
-            'Revisión de cumplimiento con los lineamientos del manual de marca; se califica consistencia visual.',
-            'Promedio de satisfacción de equipos internos en cuanto a calidad y tiempos; se califica percepción interna.',
-            'Cantidad y tipo de errores visuales detectados tras publicación; se califica nivel de revisión previa.',
-            'Cantidad de contenidos que efectivamente fueron publicados; se califica impacto y efectividad del trabajo entregado.',
-            'Comparación del CTR visual o alcance con el promedio; se califica relevancia del contenido.',
-            'Cantidad de piezas innovadoras (nuevos estilos, formatos); se califica creatividad e innovación.',
-            'Resultados de encuestas sobre colaboración y comunicación; se califica el trabajo en equipo.',
-            'Horas promedio desde solicitud hasta respuesta inicial; se califica nivel de respuesta y atención.'
-        ],
-        'Total': [1, 10, 10, 50, 10, 10, 10, 10, 100, 5, 5, 4],
-        'Cumplimiento': [1, 10, 10, 10, 8, 10, 5, 10, 100, 5, 5, 5],
-        'Ponderación': [10, 10, 8, 8, 8, 10, 8, 8, 8, 7, 7, 8]
+    "Nayeli": {
+        'KPI': ['KPI 1 Compras', 'KPI 2 Compras', 'KPI 3 Compras'],
+        'Descripción': ['Descripción KPI 1', 'Descripción KPI 2', 'Descripción KPI 3'],
+        'Total': [100, 100, 100],
+        'Cumplimiento': [0, 0, 0],
+        'Ponderación': [40, 30, 30]
     },
-    "Oscar Ramirez": {
-        'KPI': [
-            'Entregas de código a tiempo',
-            'Calidad del código',
-            'Bugs resueltos',
-            'Documentación del código',
-            'Colaboración en equipo'
-        ],
-        'Descripción': [
-            'Cumplimiento de fechas de entrega acordadas para desarrollo.',
-            'Evaluación de la calidad y limpieza del código entregado.',
-            'Cantidad de bugs resueltos vs reportados.',
-            'Calidad y completitud de la documentación del código.',
-            'Nivel de colaboración y comunicación con el equipo.'
-        ],
-        'Total': [10, 10, 20, 10, 5],
-        'Cumplimiento': [0, 0, 0, 0, 0],
-        'Ponderación': [25, 25, 20, 15, 15]
-    }
+    # Agregar KPIs para cada empleado...
 }
 
 # Función para obtener KPIs por defecto
@@ -97,7 +44,6 @@ def show_login():
         if submit:
             if login(username, password):
                 st.session_state.logged_in = True
-                st.session_state.user = username
                 st.rerun()
             else:
                 st.error("Usuario o contraseña incorrectos")
@@ -109,7 +55,8 @@ def show_main():
     # Mostrar información del usuario
     st.sidebar.markdown(f"""
     ### Usuario: {USERS[st.session_state.user]['name']}
-    **Rol**: {USERS[st.session_state.user]['role'].title()}
+    **Rol**: {USERS[st.session_state.user]['role'].replace('_', ' ').title()}
+    **Departamento**: {USERS[st.session_state.user]['department'] or 'Todos los departamentos'}
     """)
     
     if st.sidebar.button("Cerrar Sesión"):
@@ -142,6 +89,10 @@ def show_main():
 
     st.markdown("---")
 
+    if not empleado:
+        st.warning("No hay empleados disponibles para evaluar en este departamento.")
+        return
+
     # Obtener KPIs según el empleado seleccionado
     if empleado in KPIS:
         initial_data = KPIS[empleado]
@@ -155,10 +106,11 @@ def show_main():
         st.session_state.resultado_final = 0
 
     # Editor de datos
+    puede_editar = can_edit(st.session_state.user, empleado)
     edited_df = st.data_editor(
         st.session_state.data,
         key="editor",
-        disabled=not can_edit(st.session_state.user, empleado),
+        disabled=not puede_editar,
         num_rows="fixed",
         column_config={
             "KPI": st.column_config.TextColumn(
@@ -179,7 +131,7 @@ def show_main():
                 format="%d",
                 step=1,
                 width="small",
-                disabled=not can_edit(st.session_state.user, empleado)
+                disabled=not puede_editar
             ),
             "Cumplimiento": st.column_config.NumberColumn(
                 "Cumplimiento",
@@ -187,7 +139,7 @@ def show_main():
                 format="%d",
                 step=1,
                 width="small",
-                disabled=not can_edit(st.session_state.user, empleado)
+                disabled=not puede_editar
             ),
             "Ponderación": st.column_config.NumberColumn(
                 "Ponderación %",
@@ -211,7 +163,7 @@ def show_main():
     # Botón de evaluación
     col1, col2, col3 = st.columns([3, 1, 1])
     with col2:
-        if st.button("📊 Evaluar KPIs", type="primary", use_container_width=True):
+        if st.button("📊 Evaluar KPIs", type="primary", use_container_width=True, disabled=not puede_editar):
             # Calcular resultado fórmula (en porcentaje entero)
             edited_df['Resultado fórmula'] = np.where(
                 edited_df['Total'] != 0,
