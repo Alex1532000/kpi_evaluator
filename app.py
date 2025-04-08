@@ -3,7 +3,91 @@ import pandas as pd
 import numpy as np
 from users import login, get_accessible_departments, get_accessible_employees, can_edit, USERS, DEPARTAMENTOS
 
-st.set_page_config(page_title="Sistema de Evaluación de KPIs", layout="wide")
+st.set_page_config(
+    page_title="Sistema de Evaluación de KPIs",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Estilos CSS personalizados
+st.markdown("""
+<style>
+    /* Estilos para la página de login */
+    .login-container {
+        display: flex;
+        padding: 0;
+        margin: 0;
+        height: 100vh;
+    }
+    .image-section {
+        flex: 2;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+    }
+    .login-section {
+        flex: 1;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: white;
+    }
+    .login-box {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+    }
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .stButton button {
+        width: 100%;
+        background-color: #2c5364;
+        color: white;
+        border: none;
+        padding: 0.5rem;
+        margin-top: 1rem;
+    }
+    .forgot-password {
+        text-align: center;
+        margin-top: 1rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    .welcome-text {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+    .welcome-subtext {
+        font-size: 1.2rem;
+        color: #e0e0e0;
+        margin-bottom: 2rem;
+    }
+    /* Iconos de evaluación */
+    .evaluation-icons {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+    .evaluation-icon {
+        font-size: 3rem;
+        color: white;
+    }
+    /* Ocultar el header por defecto de Streamlit en la página de login */
+    [data-testid="stHeader"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Guardar departamentos en session_state para acceso desde users.py
 st.session_state.departamentos = DEPARTAMENTOS
@@ -34,14 +118,59 @@ def get_default_kpis():
 
 # Función para mostrar la página de login
 def show_login():
-    st.title("Sistema de Evaluación de KPIs")
+    st.markdown("""
+    <div class="login-container">
+        <div class="image-section">
+            <h1 class="welcome-text">Evaluación de Desempeño</h1>
+            <p class="welcome-subtext">Sistema integral para la gestión y evaluación del rendimiento laboral</p>
+            <div class="evaluation-icons">
+                <div class="evaluation-icon">📊</div>
+                <div class="evaluation-icon">📈</div>
+                <div class="evaluation-icon">🎯</div>
+            </div>
+            <img src="https://img.freepik.com/free-vector/business-team-putting-together-jigsaw-puzzle-isolated-flat-vector-illustration-cartoon-partners-working-connection-teamwork-partnership-cooperation-concept_74855-9814.jpg" 
+                 style="max-width: 80%; margin-top: 2rem; border-radius: 10px;">
+        </div>
+        <div class="login-section">
+            <div class="login-box">
+                <div class="login-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p style="color: #666;">Ingrese sus credenciales para continuar</p>
+                </div>
+                <form>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="color: #333;">Usuario</label>
+                        <input type="text" id="username" 
+                               style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="color: #333;">Contraseña</label>
+                        <input type="password" id="password" 
+                               style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin: 1rem 0;">
+                        <input type="checkbox" id="remember" style="margin-right: 0.5rem;">
+                        <label for="remember" style="color: #666;">Recordar mis credenciales</label>
+                    </div>
+                    <button type="submit" style="width: 100%; background-color: #2c5364; color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer;">
+                        Iniciar Sesión
+                    </button>
+                </form>
+                <div class="forgot-password">
+                    <a href="#" style="color: #2c5364; text-decoration: none;">¿Olvidó su contraseña?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    with st.form("login_form"):
-        username = st.text_input("Usuario")
-        password = st.text_input("Contraseña", type="password")
-        submit = st.form_submit_button("Iniciar Sesión")
+    # Formulario real de Streamlit (oculto pero funcional)
+    with st.form("login_form", clear_on_submit=True):
+        username = st.text_input("", key="username_hidden", label_visibility="collapsed")
+        password = st.text_input("", type="password", key="password_hidden", label_visibility="collapsed")
+        submitted = st.form_submit_button("", type="primary")
         
-        if submit:
+        if submitted:
             if login(username, password):
                 st.session_state.logged_in = True
                 st.rerun()
