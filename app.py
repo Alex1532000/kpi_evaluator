@@ -418,9 +418,8 @@ def show_main():
         return
 
     # Obtener KPIs según el empleado seleccionado
-    empleado_key = empleado.lower().replace(" ", "")
-    if empleado_key in KPIS:
-        initial_data = KPIS[empleado_key]
+    if empleado in KPIS:
+        initial_data = KPIS[empleado]
     else:
         initial_data = get_default_kpis()
 
@@ -487,6 +486,7 @@ def show_main():
 
     # Botones de evaluación y exportación
     col1, col2, col3 = st.columns([3, 1, 1])
+    
     with col2:
         if st.button("📊 Evaluar KPIs", type="primary", use_container_width=True, disabled=not puede_editar):
             # Calcular resultado fórmula (en porcentaje entero)
@@ -509,7 +509,7 @@ def show_main():
             st.download_button(
                 label="⬇️ Descargar Reporte",
                 data=excel_data,
-                file_name=f"kpis_{empleado.lower().replace(' ', '_')}_{fecha_eval.strftime('%Y%m')}.xlsx",
+                file_name=f"kpis_{empleado}_{fecha_eval.strftime('%Y%m')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
