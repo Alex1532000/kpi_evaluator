@@ -126,6 +126,39 @@ KPIS = {
         'Cumplimiento': [0, 0, 0, 0, 0, 0, 0, 0],
         'Ponderación': [15, 10, 15, 15, 10, 10, 15, 10]
     },
+    "Eduardo": {
+        'KPI': [
+            'Entregas a tiempo',
+            'Diseños aprobados',
+            'Materiales diseñados',
+            'Interacción en redes',
+            'Manual de marca',
+            'Satisfacción interna',
+            'Errores post-publicación',
+            'Contenidos publicados',
+            'Impacto en redes',
+            'Innovación visual',
+            'Colaboración',
+            'Tiempo de respuesta'
+        ],
+        'Descripción': [
+            'Fechas de entrega planificadas vs reales; se califica el cumplimiento de los plazos',
+            'Número de diseños aceptados sin corrección; se califica la precisión y alineación con el briefing',
+            'Volumen de trabajo entregado; se califica la productividad mensual',
+            'Número de likes, comentarios y compartidos en relación a las impresiones; se califica la efectividad del diseño en redes',
+            'Revisión de cumplimiento con los lineamientos del manual de marca; se califica consistencia visual',
+            'Promedio de satisfacción de equipos internos en cuanto a calidad y tiempos; se califica percepción interna',
+            'Cantidad y tipo de errores visuales detectados tras publicación; se califica nivel de revisión previa',
+            'Cantidad de contenidos que efectivamente fueron publicados; se califica impacto y efectividad del trabajo entregado',
+            'Comparación del CTR visual o alcance con el promedio; se califica relevancia del contenido',
+            'Cantidad de piezas innovadoras (nuevos estilos, formatos); se califica creatividad e innovación',
+            'Resultados de encuestas sobre colaboración y comunicación; se califica el trabajo en equipo',
+            'Horas promedio desde solicitud hasta respuesta inicial; se califica nivel de respuesta y atención'
+        ],
+        'Total': [1, 10, 10, 50, 10, 10, 10, 10, 100, 5, 5, 4],
+        'Cumplimiento': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        'Ponderación': [10, 10, 8, 8, 8, 10, 8, 8, 8, 7, 7, 8]
+    },
     # Agregar KPIs para cada empleado...
 }
 
