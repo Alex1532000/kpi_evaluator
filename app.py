@@ -418,8 +418,9 @@ def show_main():
         return
 
     # Obtener KPIs según el empleado seleccionado
-    if empleado.lower().replace(" ", "") in KPIS:
-        initial_data = KPIS[empleado.lower().replace(" ", "")]
+    empleado_key = empleado.lower().replace(" ", "")
+    if empleado_key in KPIS:
+        initial_data = KPIS[empleado_key]
     else:
         initial_data = get_default_kpis()
 
