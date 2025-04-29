@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from users import login, get_accessible_departments, get_accessible_employees, can_edit, USERS, DEPARTAMENTOS
+import io
+from datetime import datetime
 
 st.set_page_config(
     page_title="Sistema de Evaluación de KPIs",
@@ -235,16 +237,151 @@ def show_login():
             else:
                 st.error("Usuario o contraseña incorrectos")
 
+# Función para exportar KPIs individuales a Excel
+def export_individual_kpis(empleado, departamento, fecha, df_kpis):
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    workbook = writer.book
+    worksheet = workbook.add_worksheet('KPIs')
+    
+    # Formato para títulos
+    header_format = workbook.add_format({
+        'bold': True,
+        'font_size': 12,
+        'align': 'left',
+        'bg_color': '#2c5364',
+        'font_color': 'white'
+    })
+    
+    # Formato para subtítulos
+    subheader_format = workbook.add_format({
+        'bold': True,
+        'font_size': 11,
+        'align': 'left',
+        'bg_color': '#203a43'
+    })
+    
+    # Formato para datos
+    data_format = workbook.add_format({
+        'font_size': 10,
+        'align': 'left'
+    })
+    
+    # Escribir encabezado
+    worksheet.write(0, 0, f"Evaluación de KPIs - {empleado}", header_format)
+    worksheet.write(1, 0, f"Departamento: {departamento}", data_format)
+    worksheet.write(2, 0, f"Fecha de evaluación: {fecha.strftime('%d/%m/%Y')}", data_format)
+    
+    # Escribir descripción general
+    worksheet.write(4, 0, "Descripción de la evaluación:", subheader_format)
+    worksheet.write(5, 0, "Evaluación mensual de indicadores clave de desempeño (KPIs) que miden la eficiencia, calidad y cumplimiento de objetivos.", data_format)
+    
+    # Escribir KPIs
+    worksheet.write(7, 0, "Detalle de KPIs", subheader_format)
+    
+    # Encabezados de la tabla
+    columns = ['KPI', 'Descripción', 'Meta', 'Cumplimiento', 'Ponderación', 'Calificación']
+    for col, header in enumerate(columns):
+        worksheet.write(8, col, header, header_format)
+    
+    # Datos de KPIs
+    for row, (index, kpi_row) in enumerate(df_kpis.iterrows(), start=9):
+        worksheet.write(row, 0, kpi_row['KPI'], data_format)
+        worksheet.write(row, 1, kpi_row['Descripción'], data_format)
+        worksheet.write(row, 2, kpi_row['Total'], data_format)
+        worksheet.write(row, 3, kpi_row['Cumplimiento'], data_format)
+        worksheet.write(row, 4, f"{kpi_row['Ponderación']}%", data_format)
+        if 'Calificación' in df_kpis.columns:
+            worksheet.write(row, 5, f"{kpi_row['Calificación']}%", data_format)
+    
+    # Ajustar anchos de columna
+    worksheet.set_column(0, 0, 30)  # KPI
+    worksheet.set_column(1, 1, 50)  # Descripción
+    worksheet.set_column(2, 5, 15)  # Otras columnas
+    
+    writer.close()
+    return output.getvalue()
+
+# Función para exportar resumen global de KPIs
+def export_global_kpis():
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    workbook = writer.book
+    worksheet = workbook.add_worksheet('Resumen Global')
+    
+    # Formatos
+    header_format = workbook.add_format({
+        'bold': True,
+        'font_size': 12,
+        'align': 'left',
+        'bg_color': '#2c5364',
+        'font_color': 'white'
+    })
+    
+    data_format = workbook.add_format({
+        'font_size': 10,
+        'align': 'left'
+    })
+    
+    # Encabezado
+    fecha_actual = datetime.now().strftime('%d/%m/%Y')
+    worksheet.write(0, 0, f"Resumen Global de KPIs - {fecha_actual}", header_format)
+    
+    # Encabezados de columnas
+    columns = ['Colaborador', 'Departamento', 'Calificación Total']
+    for col, header in enumerate(columns):
+        worksheet.write(2, col, header, header_format)
+    
+    # Recopilar datos de todos los colaboradores
+    row = 3
+    for dept, empleados in DEPARTAMENTOS.items():
+        for empleado in empleados:
+            if empleado.lower().replace(" ", "") in KPIS:
+                kpi_data = KPIS[empleado.lower().replace(" ", "")]
+                # Calcular calificación total
+                total = sum([
+                    (min(cum/tot*100, 100) if tot != 0 else 0) * pond/100
+                    for cum, tot, pond in zip(
+                        kpi_data['Cumplimiento'],
+                        kpi_data['Total'],
+                        kpi_data['Ponderación']
+                    )
+                ])
+                
+                worksheet.write(row, 0, empleado, data_format)
+                worksheet.write(row, 1, dept, data_format)
+                worksheet.write(row, 2, f"{total:.1f}%", data_format)
+                row += 1
+    
+    # Ajustar anchos de columna
+    worksheet.set_column(0, 0, 30)  # Colaborador
+    worksheet.set_column(1, 1, 30)  # Departamento
+    worksheet.set_column(2, 2, 20)  # Calificación Total
+    
+    writer.close()
+    return output.getvalue()
+
 # Función para mostrar la página principal
 def show_main():
     st.title("Sistema de Evaluación de KPIs")
     
-    # Mostrar información del usuario
+    # Mostrar información del usuario y botones de exportación en el sidebar
     st.sidebar.markdown(f"""
     ### Usuario: {USERS[st.session_state.user]['name']}
     **Rol**: {USERS[st.session_state.user]['role'].replace('_', ' ').title()}
     **Departamento**: {USERS[st.session_state.user]['department'] or 'Todos los departamentos'}
     """)
+    
+    # Botón de exportación global (solo para administradores)
+    if USERS[st.session_state.user]['role'] in ['super_admin', 'admin']:
+        if st.sidebar.button("📊 Exportar Resumen Global"):
+            excel_data = export_global_kpis()
+            st.sidebar.download_button(
+                label="⬇️ Descargar Resumen Global",
+                data=excel_data,
+                file_name=f"resumen_global_kpis_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
     
     if st.sidebar.button("Cerrar Sesión"):
         for key in list(st.session_state.keys()):
@@ -272,7 +409,7 @@ def show_main():
         )
 
     with col3:
-        st.date_input("Mes de evaluación", key="fecha_evaluacion")
+        fecha_eval = st.date_input("Mes de evaluación", key="fecha_evaluacion")
 
     st.markdown("---")
 
@@ -281,8 +418,8 @@ def show_main():
         return
 
     # Obtener KPIs según el empleado seleccionado
-    if empleado in KPIS:
-        initial_data = KPIS[empleado]
+    if empleado.lower().replace(" ", "") in KPIS:
+        initial_data = KPIS[empleado.lower().replace(" ", "")]
     else:
         initial_data = get_default_kpis()
 
@@ -347,7 +484,7 @@ def show_main():
         column_order=["KPI", "Descripción", "Total", "Cumplimiento", "Ponderación", "Calificación"]
     )
 
-    # Botón de evaluación
+    # Botones de evaluación y exportación
     col1, col2, col3 = st.columns([3, 1, 1])
     with col2:
         if st.button("📊 Evaluar KPIs", type="primary", use_container_width=True, disabled=not puede_editar):
@@ -364,6 +501,16 @@ def show_main():
             # Actualizar datos en la sesión
             st.session_state.data = edited_df
             st.session_state.resultado_final = edited_df['Calificación'].sum()
+    
+    with col3:
+        if st.button("📑 Exportar KPIs", use_container_width=True):
+            excel_data = export_individual_kpis(empleado, departamento, fecha_eval, edited_df)
+            st.download_button(
+                label="⬇️ Descargar Reporte",
+                data=excel_data,
+                file_name=f"kpis_{empleado.lower().replace(' ', '_')}_{fecha_eval.strftime('%Y%m')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     # Mostrar resultado final
     st.markdown("---")
