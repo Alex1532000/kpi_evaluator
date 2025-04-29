@@ -272,7 +272,9 @@ def export_individual_kpis(empleado, departamento, fecha, df_kpis):
     total_label_format = workbook.add_format({
         'bold': True,
         'font_size': 12,
-        'align': 'left'
+        'align': 'left',
+        'bg_color': '#2c5364',
+        'font_color': 'white'
     })
     
     # Formato para el valor de la calificación
