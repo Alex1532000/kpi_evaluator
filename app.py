@@ -101,6 +101,31 @@ KPIS = {
         'Cumplimiento': [0, 0, 0],
         'Ponderación': [40, 30, 30]
     },
+    "Boris": {
+        'KPI': [
+            'Configuración de GPS - Cantidad',
+            'Configuración de GPS - Éxito',
+            'Pruebas de Funcionamiento',
+            'Ensamblaje - Productos',
+            'Ensamblaje - Accesorios',
+            'Creación de Usuarios',
+            'Creación de Unidades - Cantidad',
+            'Creación de Unidades - Calidad'
+        ],
+        'Descripción': [
+            'Cantidad total de GPS configurados según solicitudes',
+            'Porcentaje de configuraciones exitosas del total realizado',
+            'Número de equipos probados y verificados',
+            'Cantidad de productos ensamblados según solicitudes',
+            'Verificación del funcionamiento correcto de accesorios',
+            'Cantidad de usuarios creados en plataformas según solicitudes',
+            'Cantidad de unidades creadas en plataformas',
+            'Porcentaje de unidades creadas sin errores en accesos empresariales'
+        ],
+        'Total': [100, 100, 100, 100, 100, 100, 100, 100],
+        'Cumplimiento': [0, 0, 0, 0, 0, 0, 0, 0],
+        'Ponderación': [15, 10, 15, 15, 10, 10, 15, 10]
+    },
     # Agregar KPIs para cada empleado...
 }
 
