@@ -258,7 +258,8 @@ def export_individual_kpis(empleado, departamento, fecha, df_kpis):
         'bold': True,
         'font_size': 11,
         'align': 'left',
-        'bg_color': '#203a43'
+        'bg_color': '#203a43',
+        'font_color': 'white'
     })
     
     # Formato para datos
@@ -267,25 +268,38 @@ def export_individual_kpis(empleado, departamento, fecha, df_kpis):
         'align': 'left'
     })
     
+    # Formato para calificación final
+    total_format = workbook.add_format({
+        'bold': True,
+        'font_size': 14,
+        'align': 'left',
+        'bg_color': '#2c5364',
+        'font_color': 'white'
+    })
+    
     # Escribir encabezado
     worksheet.write(0, 0, f"Evaluación de KPIs - {empleado}", header_format)
     worksheet.write(1, 0, f"Departamento: {departamento}", data_format)
     worksheet.write(2, 0, f"Fecha de evaluación: {fecha.strftime('%d/%m/%Y')}", data_format)
     
+    # Calcular y escribir calificación total
+    total_calificacion = df_kpis['Calificación'].sum() if 'Calificación' in df_kpis.columns else 0
+    worksheet.merge_range('A4:C4', f"Calificación Total: {total_calificacion}%", total_format)
+    
     # Escribir descripción general
-    worksheet.write(4, 0, "Descripción de la evaluación:", subheader_format)
-    worksheet.write(5, 0, "Evaluación mensual de indicadores clave de desempeño (KPIs) que miden la eficiencia, calidad y cumplimiento de objetivos.", data_format)
+    worksheet.write(6, 0, "Descripción de la evaluación:", subheader_format)
+    worksheet.write(7, 0, "Evaluación mensual de indicadores clave de desempeño (KPIs) que miden la eficiencia, calidad y cumplimiento de objetivos.", data_format)
     
     # Escribir KPIs
-    worksheet.write(7, 0, "Detalle de KPIs", subheader_format)
+    worksheet.write(9, 0, "Detalle de KPIs", subheader_format)
     
     # Encabezados de la tabla
     columns = ['KPI', 'Descripción', 'Meta', 'Cumplimiento', 'Ponderación', 'Calificación']
     for col, header in enumerate(columns):
-        worksheet.write(8, col, header, header_format)
+        worksheet.write(10, col, header, header_format)
     
     # Datos de KPIs
-    for row, (index, kpi_row) in enumerate(df_kpis.iterrows(), start=9):
+    for row, (index, kpi_row) in enumerate(df_kpis.iterrows(), start=11):
         worksheet.write(row, 0, kpi_row['KPI'], data_format)
         worksheet.write(row, 1, kpi_row['Descripción'], data_format)
         worksheet.write(row, 2, kpi_row['Total'], data_format)
