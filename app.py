@@ -271,7 +271,16 @@ def export_individual_kpis(empleado, departamento, fecha, df_kpis):
     # Formato para calificación final
     total_format = workbook.add_format({
         'bold': True,
-        'font_size': 14,
+        'font_size': 12,
+        'align': 'left',
+        'bg_color': '#2c5364',
+        'font_color': 'white'
+    })
+    
+    # Formato para el valor de la calificación
+    total_value_format = workbook.add_format({
+        'bold': True,
+        'font_size': 12,
         'align': 'left',
         'bg_color': '#2c5364',
         'font_color': 'white'
@@ -284,7 +293,8 @@ def export_individual_kpis(empleado, departamento, fecha, df_kpis):
     
     # Calcular y escribir calificación total
     total_calificacion = df_kpis['Calificación'].sum() if 'Calificación' in df_kpis.columns else 0
-    worksheet.merge_range('A4:C4', f"Calificación Total: {total_calificacion}%", total_format)
+    worksheet.write(4, 0, "Calificación:", total_format)
+    worksheet.write(4, 1, f"{total_calificacion}%", total_value_format)
     
     # Escribir descripción general
     worksheet.write(6, 0, "Descripción de la evaluación:", subheader_format)
