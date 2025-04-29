@@ -357,14 +357,30 @@ def export_global_summary(fecha):
     row = 4
     for departamento, empleados in DEPARTAMENTOS.items():
         for empleado in empleados:
-            if empleado in KPIS:
-                df_kpis = pd.DataFrame(KPIS[empleado])
-                total_calificacion = df_kpis['Calificación'].sum() if 'Calificación' in df_kpis.columns else 0
-                
-                worksheet.write(row, 0, empleado, data_format)
-                worksheet.write(row, 1, departamento, data_format)
-                worksheet.write(row, 2, f"{total_calificacion}%", data_format)
-                row += 1
+            # Primero intentamos obtener la calificación de la sesión actual
+            calificacion = 0
+            if ('current_employee' in st.session_state and 
+                st.session_state.current_employee == empleado and 
+                'data' in st.session_state):
+                calificacion = st.session_state.data['Calificación'].sum()
+            # Si no está en la sesión, calculamos desde KPIS
+            elif empleado in KPIS:
+                kpi_data = KPIS[empleado]
+                df_temp = pd.DataFrame(kpi_data)
+                # Calcular resultado fórmula
+                df_temp['Resultado fórmula'] = np.where(
+                    df_temp['Total'] != 0,
+                    ((df_temp['Cumplimiento'] / df_temp['Total'] * 100).round(0)).astype(int),
+                    0
+                )
+                # Calcular calificación
+                df_temp['Calificación'] = ((df_temp['Resultado fórmula'] * df_temp['Ponderación'] / 100).round(0)).astype(int)
+                calificacion = df_temp['Calificación'].sum()
+            
+            worksheet.write(row, 0, empleado, data_format)
+            worksheet.write(row, 1, departamento, data_format)
+            worksheet.write(row, 2, f"{calificacion}%", data_format)
+            row += 1
     
     # Ajustar anchos de columna
     worksheet.set_column(0, 0, 30)  # Empleado
